@@ -44,9 +44,40 @@ check_db() {
     exit 1
   fi
 }
-
-
-
 check_clear() {
-    echo "Checking if Combatants get Cleared
+    echo "Checking if Combatants get Cleared"
 }
+
+##########################################################
+#
+# Kitchen Management
+#
+##########################################################
+
+clear_meals() {
+  echo "Clearing all the meals..."
+  curl -s -X DELETE "$BASE_URL/clear-meals" | grep -q '"status": "success"' 
+}
+
+create_meal() {
+  meal: $1
+  cuisine: $2
+  price: $3
+  difficulty: $4
+
+  echo "Adding meal ($meal - $cuisine, $price) to the Kitchen..."
+  curl -s -X POST "$BASE_URL/create-meal" -H "Content-Type: application/json" \
+    -d "{\"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price, \"difficulty\":\"$difficulty\"}" | grep -q '"status": "success"'
+
+  if [ $? -eq 0 ]; then
+    echo "Meal added successfully."
+  else
+    echo "Failed to add meal."
+    exit 1
+  fi
+}
+
+delete
+
+
+
