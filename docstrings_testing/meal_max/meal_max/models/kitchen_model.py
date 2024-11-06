@@ -28,6 +28,19 @@ class Meal:
 
 
 def create_meal(meal: str, cuisine: str, price: float, difficulty: str) -> None:
+    """ Creates a new meal in the meals table 
+    Args:   
+        meal(str): meal name
+        cuisine(str): country of dish
+        price(float): monetary value of the dish
+        difficulty(str): how hard the dish is to make low, med, or high
+    Raises: 
+        ValueError: the price entered is negative
+        ValueError: the diffuctly is not LOW, MED, or HIGH
+        ValueError: there is a duplicate meal with the same name
+        sqlite3.Error: If any database error occurs.
+
+    """
     if not isinstance(price, (int, float)) or price <= 0:
         raise ValueError(f"Invalid price: {price}. Price must be a positive number.")
     if difficulty not in ['LOW', 'MED', 'HIGH']:
@@ -74,6 +87,16 @@ def clear_meals() -> None:
         raise e
 
 def delete_meal(meal_id: int) -> None:
+    """ Deletes the selevted meal 
+
+    Args: 
+        meal_id(int): the id of the meal to be deleted
+    Raises: 
+        ValueError: the id has already been deleted
+        ValueError: there is not meal with that id
+        sqlite3.Error: If any database error occurs.
+
+    """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -97,6 +120,15 @@ def delete_meal(meal_id: int) -> None:
         raise e
 
 def get_leaderboard(sort_by: str="wins") -> dict[str, Any]:
+    """
+    Retrieves a leaderboard of meals from the database 
+    Args: 
+        sort_by(str="wins"): specifies the how the leaderboard should be sorted by aka wins in this case
+    Raises: 
+        ValueError: Invalue sorting parameter
+        sqlite3.Error: If any database error occurs.
+
+    """
     query = """
         SELECT id, meal, cuisine, price, difficulty, battles, wins, (wins * 1.0 / battles) AS win_pct
         FROM meals WHERE deleted = false AND battles > 0
@@ -138,6 +170,15 @@ def get_leaderboard(sort_by: str="wins") -> dict[str, Any]:
         raise e
 
 def get_meal_by_id(meal_id: int) -> Meal:
+    """get a meal by the meal id
+    Args:
+        meal_id(int): the meal id of the meal we are getting
+    Raises:
+        ValueError: The meal with the meal id was deleted
+        ValueError: Could not find the meal with the meal id
+        sqlite3.Error: If any database error occurs.
+
+     """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -159,6 +200,15 @@ def get_meal_by_id(meal_id: int) -> Meal:
 
 
 def get_meal_by_name(meal_name: str) -> Meal:
+    """get the meal by the meal name
+    Args: 
+        meal_name: the name of the meal of the name we want to get
+    Raises: 
+        ValueError: Meal with the name was deleted
+        ValueError: Meal with the name was not found
+        sqlite3.Error: If any database error occurs.
+
+    """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -180,6 +230,16 @@ def get_meal_by_name(meal_name: str) -> Meal:
 
 
 def update_meal_stats(meal_id: int, result: str) -> None:
+    """    Updates the battle statistics for a specified meal in the database.
+    Args: 
+        meal_id(int): the unique identifier of the meal whose stats are being updated 
+        result(str): The outcome of the battle for the specified meal, must be either 'win' or 'loss'
+    Raises: 
+        ValueError: Meal with the meal id was deleted
+        ValueError: Meal with the meal id was not found
+        ValueError: the result is not a string of win or loss
+        sqlite3.Error: If any database error occurs.
+     """
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
