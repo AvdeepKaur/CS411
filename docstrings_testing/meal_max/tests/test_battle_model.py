@@ -2,7 +2,6 @@ import pytest
 
 from meal_max.models.battle_model import BattleModel
 from meal_max.models.kitchen_model import Meal
-from meal_max.utils.random_utils import get_random
 
 @pytest.fixture()
 def battle_model():
@@ -25,13 +24,10 @@ def sample_combatant3():
 def sample_battle(sample_combatant1, sample_combatant2):
     return [sample_combatant1, sample_combatant2]
 
+@pytest.fixture()
 def sample_battle2(sample_combatant1, sample_combatant2, sample_combatant3):
     return [sample_combatant1, sample_combatant2, sample_combatant3]
 
-
-##################################################
-# Add Combatant Management Test Cases
-##################################################
 
 def test_get_battle_score(battle_model, sample_combatant1):
     score = battle_model.get_battle_score(sample_combatant1)
@@ -45,27 +41,27 @@ def test_clear_combatants(battle_model, sample_combatant1):
     assert len(combatant_list) == 0
 
 def test_get_combatants(battle_model, sample_battle):
-    all_combatants = battle_model.get_combatants(sample_battle)
+    battle_model.prep_combatant(sample_battle[0])
+    battle_model.prep_combatant(sample_battle[1])
+    all_combatants = battle_model.get_combatants()
 
     assert len(all_combatants) == 2
     assert all_combatants[0].id == 0
     assert all_combatants[1].id == 1
 
 def test_prep_combatant(battle_model, sample_battle2):
-    first_combatant = battle_model.prep_combatant(sample_battle2[0])
+    battle_model.prep_combatant(sample_battle2[0])
 
-    assert len(first_combatant.combatants) == 1
-    assert first_combatant.combatants[0].meal == "popcorn"
+    assert len(battle_model.combatants) == 1
+    assert battle_model.combatants[0].meal == "popcorn"
 
-    second_combatant = battle_model.prep_combatant(sample_battle2[1])
+    battle_model.prep_combatant(sample_battle2[1])
 
-    assert len(second_combatant.combatants) == 2
-    assert second_combatant.combatants[1].meal == "pasta"
+    assert len(battle_model.combatants) == 2
+    assert battle_model.combatants[1].meal == "pasta"
 
-    third_combatant = battle_model.prep_combatant(sample_battle2[2])
-
-    assert len(third_combatant.combatants) == 3
-    assert third_combatant.combatants[0].meal == "pizza"
+    with pytest.raises(ValueError, match="Combatant list is full, cannot add more combatants."):
+        battle_model.prep_combatant(sample_battle2[2])
 
 def test_battle(battle_model, sample_battle):
     battle_model.prep_combatant(sample_battle[0])
