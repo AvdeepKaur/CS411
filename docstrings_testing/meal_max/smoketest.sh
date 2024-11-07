@@ -63,15 +63,17 @@ clear_meals() {
 
 ##### create_meal may need to be changed, refer to kitchen_models.py and app.py
 create_meal() {
-  meal_id=$1
+  id=$1
   meal=$2
   cuisine=$3
   price=$4
   difficulty=$5
 
   echo "Adding meal ($meal - $cuisine, $price) to the Kitchen..."
-  curl -s -X POST "$BASE_URL/create-meal" -H "Content-Type: application/json" \
-    -d "{\"meal_id\":$meal_id, \"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price, \"difficulty\":\"$difficulty\"}" | grep -q '"status": "success"'
+  response=$(curl -s -X POST "$BASE_URL/create-meal" -H "Content-Type: application/json" \
+    -d "{\"id\":\"$id\", \"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price, \"difficulty\":\"$difficulty\"}" | grep -q '"status": "combatant added"')
+
+  echo "$response"
 
   if [ $? -eq 0 ]; then
     echo "Meal added successfully."
