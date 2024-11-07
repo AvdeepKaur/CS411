@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the base URL for the Flask API
-BASE_URL="http://localhost:5000/api"
+BASE_URL="http://localhost:5001/api"
 
 # Flag to control whether to echo JSON output
 ECHO_JSON=false
@@ -63,14 +63,15 @@ clear_meals() {
 
 ##### create_meal may need to be changed, refer to kitchen_models.py and app.py
 create_meal() {
-  meal=$1
-  cuisine=$2
-  price=$3
-  difficulty=$4
+  meal_id=$1
+  meal=$2
+  cuisine=$3
+  price=$4
+  difficulty=$5
 
   echo "Adding meal ($meal - $cuisine, $price) to the Kitchen..."
   curl -s -X POST "$BASE_URL/create-meal" -H "Content-Type: application/json" \
-    -d "{\"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price, \"difficulty\":\"$difficulty\"}" | grep -q '"status": "success"'
+    -d "{\"meal_id\":$meal_id, \"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price, \"difficulty\":\"$difficulty\"}" | grep -q '"status": "success"'
 
   if [ $? -eq 0 ]; then
     echo "Meal added successfully."
@@ -233,3 +234,32 @@ prep_combatant() {
     exit 1
   fi
 }
+
+check_db
+
+check_clear clear_meals
+
+create_meal 0 "Naan" "Indian" 5 1 
+create_meal 1"Biryani" "Indian" 18 5 
+create_meal 2 "Pizza" "Italian" 20 4 
+create_meal 3 "Hot Pot" "Chinese" 35 6 
+create_meal 4 "Dak Galbi" "Korean" 5 5
+
+delete_meal 0 
+get_leaderboard
+
+get_meal_by_id 1
+get_meal_by_name "Biryani"
+
+clear_combatants
+
+prep_combatant "Biryani" 
+prep_combatant "Pizza"
+
+get_combatants
+
+battle
+
+get_battle_score
+
+clear_combatants
