@@ -1,3 +1,4 @@
+from unittest.mock import patch
 import pytest
 
 from meal_max.models.battle_model import BattleModel
@@ -77,11 +78,28 @@ def test_get_battle_score(battle_model, sample_combatant1):
     assert score == 37
 
 
-def test_battle(battle_model, sample_battle):
+@patch("meal_max.utils.random_utils.get_random", return_value=0.3)
+@patch("meal_max.models.kitchen_model.update_meal_stats")
+def test_battle(mock_update_meal_stats, mock_get_random, battle_model, sample_battle):
     """Test successfully retrieving the winner from battle."""
     battle_model.prep_combatant(sample_battle[0])
     battle_model.prep_combatant(sample_battle[1])
 
     winner = battle_model.battle()
 
-    assert winner == "pasta"
+    assert winner == sample_battle[1]
+    mock_get_random.assert_called_once() 
+    mock_update_meal_stats.assert_any_call(sample_battle[1].id, "win")
+    mock_update_meal_stats.assert_any_call(sample_battle[0].id, "loss")
+    assert len(battle_model.combatants) == 1
+    assert battle_model.combatants[0] == sample_battle[1]
+
+def test_battle_not_enough_combatants(battle_model, sample_combatant1):
+    """Test that battling with less than 2 combatants raises a ValueError."""
+    with pytest.raises(ValueError, match="Two combatants must be prepped for a battle."):
+        battle_model.battle()
+    
+    battle_model.prep_combatant(sample_combatant1)
+
+    with pytest.raises(ValueError, match="Two combatants must be prepped for a battle."):
+        battle_model.battle()
