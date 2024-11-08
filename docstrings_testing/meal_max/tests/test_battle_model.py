@@ -1,4 +1,5 @@
-from unittest.mock import patch
+from contextlib import contextmanager
+from unittest.mock import MagicMock, patch
 import pytest
 
 from meal_max.models.battle_model import BattleModel
@@ -31,6 +32,34 @@ def sample_battle(sample_combatant1, sample_combatant2):
 def sample_battle2(sample_combatant1, sample_combatant2, sample_combatant3):
     return [sample_combatant1, sample_combatant2, sample_combatant3]
 
+"""Mocking the database"""
+@pytest.fixture()
+def mock_db_connection(mocker):
+    mock_conn = MagicMock()
+    mock_cursor = MagicMock()
+    mock_conn.cursor.return_value = mock_cursor
+
+    def fetchone_side_effect(*args, **kwargs):
+        if "WHERE id = 0" in args[0]:  
+            return {"id": 0, "meal": "popcorn", "deleted": False}
+        elif "WHERE id = 1" in args[0]:  
+            return {"id": 1, "meal": "pasta", "deleted": False}
+        return None
+
+    mock_cursor.fetchone.side_effect = fetchone_side_effect
+    mocker.patch("meal_max.models.kitchen_model.get_db_connection", return_value=mock_conn)
+    return mock_cursor
+
+"""Fixtures that mock existing functions"""
+@pytest.fixture
+def mock_update_meal_stats(mocker):
+    """Mock the update_meal_stats function for testing purposes."""
+    return mocker.patch("meal_max.models.kitchen_model.update_meal_stats")
+
+@pytest.fixture
+def mock_get_random(mocker):
+    """Mock the get_random function for testing purposes."""
+    return mocker.patch("meal_max.utils.random_utils.get_random",return_value=0.3)
 
 ##################################################
 # Combatant Management Test Cases
@@ -75,12 +104,11 @@ def test_prep_combatant(battle_model, sample_battle2):
 def test_get_battle_score(battle_model, sample_combatant1):
     """Test successfully retrieving the correct score"""
     score = battle_model.get_battle_score(sample_combatant1)
-    assert score == 37
+    difficulty_modifier = {"HIGH": 1, "MED": 2, "LOW": 3}
+    assert score == (sample_combatant1.price * len(sample_combatant1.cuisine)) - difficulty_modifier[sample_combatant1.difficulty]
+    ## or just assert score == 37 bc that's the result for combatant1
 
-
-@patch("meal_max.utils.random_utils.get_random", return_value=0.3)
-@patch("meal_max.models.kitchen_model.update_meal_stats")
-def test_battle(mock_update_meal_stats, mock_get_random, battle_model, sample_battle):
+def test_battle(mock_update_meal_stats, mock_get_random, battle_model, sample_battle, mock_db_connection):
     """Test successfully retrieving the winner from battle."""
     battle_model.prep_combatant(sample_battle[0])
     battle_model.prep_combatant(sample_battle[1])
@@ -88,9 +116,12 @@ def test_battle(mock_update_meal_stats, mock_get_random, battle_model, sample_ba
     winner = battle_model.battle()
 
     assert winner == sample_battle[1]
+
     mock_get_random.assert_called_once() 
     mock_update_meal_stats.assert_any_call(sample_battle[1].id, "win")
     mock_update_meal_stats.assert_any_call(sample_battle[0].id, "loss")
+    
+
     assert len(battle_model.combatants) == 1
     assert battle_model.combatants[0] == sample_battle[1]
 
