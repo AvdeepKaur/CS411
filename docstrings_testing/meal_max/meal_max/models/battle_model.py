@@ -11,11 +11,21 @@ configure_logger(logger)
 
 
 class BattleModel:
-
+    """A class to manage a list of combatants. 
+        Attributes:
+            combatants(List[Meal]): List of meals (aka combatants)
+    """
     def __init__(self):
+        """Initializes the BattleModel with an empty list of meals 
+        """
         self.combatants: List[Meal] = []
 
     def battle(self) -> str:
+        """ Battles the first 2 meals in the list 
+
+        Raises: 
+            ValueError: If there is not enough combatants to battle
+        """
         logger.info("Two meals enter, one meal leaves!")
 
         if len(self.combatants) < 2:
@@ -69,10 +79,16 @@ class BattleModel:
         return winner.meal
 
     def clear_combatants(self):
+        """ Clears the combatants in the list 
+        """
         logger.info("Clearing the combatants list.")
         self.combatants.clear()
 
     def get_battle_score(self, combatant: Meal) -> float:
+        """ Gets the numerical battle score of the meal
+        Args: 
+            combatant (Meal): the meal we want to find the score
+        """
         difficulty_modifier = {"HIGH": 1, "MED": 2, "LOW": 3}
 
         # Log the calculation process
@@ -88,10 +104,19 @@ class BattleModel:
         return score
 
     def get_combatants(self) -> List[Meal]:
+        """
+        Returns a list of all the combatants
+        """
         logger.info("Retrieving current list of combatants.")
         return self.combatants
 
     def prep_combatant(self, combatant_data: Meal):
+        """ Adds combatant to the combantants list 
+        Args: 
+            combatant_data(Meal): the meal and its info you want to add to the list 
+        Raises: 
+            ValueError: The combatants list is full so it cannot be added (>=2)
+        """
         if len(self.combatants) >= 2:
             logger.error("Attempted to add combatant '%s' but combatants list is full", combatant_data.meal)
             raise ValueError("Combatant list is full, cannot add more combatants.")
