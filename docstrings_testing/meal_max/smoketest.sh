@@ -120,7 +120,7 @@ get_meal_by_id() {
 
   if echo "$response" | grep -q '"status": "success"'; then
     echo "Meal retrieved successfully by ID ($meal_id)."
-    if ["$ECHO_JSON" = true ]; then
+    if [ "$ECHO_JSON" = true ]; then
       echo "Meal JSON (ID $meal_id):"
       echo "$response" | jq .
     fi
